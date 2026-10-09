@@ -119,6 +119,50 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &14612520
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 14612522}
+  - component: {fileID: 14612521}
+  m_Layer: 0
+  m_Name: ScenesManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &14612521
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 14612520}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: da8d6145b45dc9442aeec3ccdc884b62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ScenesManager
+--- !u!4 &14612522
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 14612520}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &197468922
 GameObject:
   m_ObjectHideFlags: 0
@@ -903,6 +947,7 @@ GameObject:
   - component: {fileID: 936115032}
   - component: {fileID: 936115031}
   - component: {fileID: 936115030}
+  - component: {fileID: 936115033}
   m_Layer: 5
   m_Name: Exit
   m_TagString: Untagged
@@ -974,9 +1019,21 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 936115033}
+        m_TargetAssemblyTypeName: GetAudio, Assembly-CSharp
+        m_MethodName: playClick
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 14612521}
         m_TargetAssemblyTypeName: ScenesManager, Assembly-CSharp
-        m_MethodName: OpenScene
+        m_MethodName: CloseGame
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1024,6 +1081,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 936115028}
   m_CullTransparentMesh: 1
+--- !u!114 &936115033
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 936115028}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f352802e4a4187c488ddddfaf93d0bdb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GetAudio
 --- !u!1 &1031601800
 GameObject:
   m_ObjectHideFlags: 0
@@ -1036,6 +1105,7 @@ GameObject:
   - component: {fileID: 1031601804}
   - component: {fileID: 1031601803}
   - component: {fileID: 1031601802}
+  - component: {fileID: 1031601805}
   m_Layer: 5
   m_Name: Setting
   m_TagString: Untagged
@@ -1119,6 +1189,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
+      - m_Target: {fileID: 1031601805}
+        m_TargetAssemblyTypeName: GetAudio, Assembly-CSharp
+        m_MethodName: playClick
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
 --- !u!114 &1031601803
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1157,6 +1239,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1031601800}
   m_CullTransparentMesh: 1
+--- !u!114 &1031601805
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1031601800}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f352802e4a4187c488ddddfaf93d0bdb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GetAudio
 --- !u!1 &1179838057
 GameObject:
   m_ObjectHideFlags: 0
@@ -1830,6 +1924,7 @@ GameObject:
   - component: {fileID: 1967229092}
   - component: {fileID: 1967229091}
   - component: {fileID: 1967229090}
+  - component: {fileID: 1967229093}
   m_Layer: 5
   m_Name: Play
   m_TagString: Untagged
@@ -1901,9 +1996,21 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 14612521}
         m_TargetAssemblyTypeName: ScenesManager, Assembly-CSharp
         m_MethodName: OpenScene
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 1967229093}
+        m_TargetAssemblyTypeName: GetAudio, Assembly-CSharp
+        m_MethodName: playClick
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1951,6 +2058,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1967229087}
   m_CullTransparentMesh: 1
+--- !u!114 &1967229093
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1967229087}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f352802e4a4187c488ddddfaf93d0bdb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GetAudio
 --- !u!1 &2133019797
 GameObject:
   m_ObjectHideFlags: 0
@@ -2154,3 +2273,4 @@ SceneRoots:
   - {fileID: 1460872099}
   - {fileID: 1179838060}
   - {fileID: 3121281872876786814}
+  - {fileID: 14612522}

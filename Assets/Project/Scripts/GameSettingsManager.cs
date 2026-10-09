@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using TMPro; // ������Ѻ TextMeshPro
 using System.Collections.Generic;
@@ -45,12 +46,16 @@ public class GameSettingsManager : MonoBehaviour
     private int currentMusicLevel = 10;   // ������÷Ѵ���
     private int currentAmbientLevel = 10; // ������÷Ѵ���
 
+    private void Awake()
+    {
+        LoadSettings();
+    }
+
     private void Start()
     {
         if (audioSettings == null) audioSettings = FindAnyObjectByType<AudioSettings>();
 
         FilterSupportedResolutions();
-        LoadSettings();
         UpdateUITexts();
 
         // ������÷Ѵ��� ���ͺѧ�Ѻ�������Ѻ�дѺ���§��� UI �ѹ�յ͹�������
@@ -166,10 +171,10 @@ public class GameSettingsManager : MonoBehaviour
         currentFullscreenIndex = PlayerPrefs.GetInt("FullscreenIndex", 1);
 
         // ��Ŵ������������� Key ����
-        currentMasterLevel = PlayerPrefs.GetInt("MasterLevelUI", 10);
-        currentSfxLevel = PlayerPrefs.GetInt("SFXLevelUI", 10);
-        currentMusicLevel = PlayerPrefs.GetInt("MusicLevelUI", 10);
-        currentAmbientLevel = PlayerPrefs.GetInt("AmbientLevelUI", 10);
+        currentMasterLevel = PlayerPrefs.GetInt("MasterLevelUI", 4);
+        currentSfxLevel = PlayerPrefs.GetInt("SFXLevelUI", 4);
+        currentMusicLevel = PlayerPrefs.GetInt("MusicLevelUI", 4);
+        currentAmbientLevel = PlayerPrefs.GetInt("AmbientLevelUI", 4);
     }
 
     private void FilterSupportedResolutions()

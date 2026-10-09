@@ -7,4 +7,9 @@ public class ScenesManager : MonoBehaviour
     {
         SceneManager.LoadSceneAsync(1);
     }
+
+    public void CloseGame()
+    {
+        Application.Quit();
+    }
 }
