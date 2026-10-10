@@ -4,7 +4,7 @@ using VContainer;
 
 public class PlayerMovement : MonoBehaviour
 {
-    [SerializeField] private Rigidbody rigidbody;
+    [SerializeField] private Rigidbody rg;
     
     
     private PlayerInputReader inputReader;
@@ -17,6 +17,12 @@ public class PlayerMovement : MonoBehaviour
 
     public void Update()
     {
-        rigidbody.AddForce(inputReader.MovementInput * 10, ForceMode.Force);
+        HandleHorizontalMovement();
+    }
+
+    private void HandleHorizontalMovement()
+    {
+        Vector3 movementDirection = new Vector3(inputReader.MovementInput.x, 0, inputReader.MovementInput.y).normalized * 10;
+        rg.AddForce(movementDirection, ForceMode.Force);    
     }
 }
