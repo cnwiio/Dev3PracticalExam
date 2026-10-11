@@ -67,13 +67,17 @@ MonoBehaviour:
   - {fileID: 1186077426998975882}
   bgmSounds:
   - name: Level
-    clip: {fileID: 8300000, guid: 6c8ac3d43d320314c8030ec739c7a2e7, type: 3}
+    clip: {fileID: 8300000, guid: 5a66dac8b4cf93e458a6e7ad7e141eda, type: 3}
   sfxSounds:
   - name: Click
     clip: {fileID: 8300000, guid: 47d1fe9cc7d251c478bb794f5d833776, type: 3}
   - name: Hover
     clip: {fileID: 8300000, guid: a3169ea3a00ef1b4390da0797af179f7, type: 3}
   - name: Hit
+    clip: {fileID: 8300000, guid: 2583973a127b5954090a5b08b1e79dc1, type: 3}
+  - name: ItemCollect
+    clip: {fileID: 8300000, guid: 2583973a127b5954090a5b08b1e79dc1, type: 3}
+  - name: ItemHit
     clip: {fileID: 8300000, guid: 2583973a127b5954090a5b08b1e79dc1, type: 3}
   ambientSounds: []
 --- !u!82 &8114645990622542773

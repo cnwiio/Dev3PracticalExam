@@ -12,5 +12,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 100e4a143c3940929103d94c9497ca85, type: 3}
   m_Name: FavoritesManager
   m_EditorClassIdentifier: CustomToolbar::OpalStudio.CustomToolbar.Editor.ToolbarElements.Favorites.Data.FavoritesManager
-  allLists: []
+  allLists:
+  - name: New List 1
+    items:
+    - itemType: 0
+      guid: 5b8e1ab49f4493a47b926a88dbefdaa0
+      instanceID: 0
+      scenePath: 
+      alias: White
+    - itemType: 0
+      guid: 9b40755422da8044ea48de0b8989612c
+      instanceID: 0
+      scenePath: 
+      alias: Yellow
+    - itemType: 0
+      guid: f638df493fb0a9143a4905521e683bdb
+      instanceID: 0
+      scenePath: 
+      alias: Item Add Score
   lastUsedListIndex: 0
