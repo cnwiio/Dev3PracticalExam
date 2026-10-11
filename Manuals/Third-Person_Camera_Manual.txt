@@ -1,0 +1,65 @@
+THIRD-PERSON CAMERA - MANUAL SETUP (Unity Editor)
+=================================================
+Cinemachine 3.1.7 is already in Packages/manifest.json.
+
+NEW / CHANGED SCRIPTS
+- Scripts/Camera/ThirdPersonCameraSettings.cs   (ScriptableObject: camera stats)
+- Scripts/Camera/ThirdPersonCameraController.cs (drives the Cinemachine camera)
+- Scripts/Player/PlayerMovementStats.cs         (ScriptableObject: movement stats)
+- PlayerMovement now uses PlayerMovementStats (old inline fields are gone, so assign it!)
+- PlayerInputReader has a new "Look Action" field
+- LevelOneLifetimeScope has a new "Third Person Camera Controller" field
+
+STEP 1 - Create the stat assets
+  Project window > Assets/Project/ (e.g. a "Settings" folder) > Right-click >
+  Create > Project > Third Person Camera Settings   -> "CameraSettings"
+  Create > Project > Player Movement Stats          -> "PlayerMovementStats"
+  Tweak values in the Inspector (they apply live during Play mode).
+
+STEP 2 - Main Camera (GamePlay scene)
+  - Select Main Camera > Add Component > CinemachineBrain (if missing).
+
+STEP 3 - Camera target object
+  - Create Empty GameObject "CameraTarget" at the scene root (NOT a child of the Player,
+    so it does not inherit the player's rotation).
+  - Add Component > ThirdPersonCameraController:
+      Settings               = CameraSettings asset
+      Player                 = Player GameObject (Transform)
+      Cinemachine Camera     = the CinemachineCamera from step 4
+      Lock Cursor            = on
+
+STEP 4 - Cinemachine camera
+  - GameObject > Cinemachine > Targeted Cameras > Follow Camera  (creates a CinemachineCamera).
+  - In CinemachineCamera:
+      Tracking Target = CameraTarget
+      Position Control = Third Person Follow
+      Rotation Control = Rotation Composer must be OFF / None (the controller rotates the target).
+        -> set Rotation Control to "Same As Follow Target".
+  - Distance, shoulder, damping and collision values are overwritten by CameraSettings every frame.
+
+STEP 5 - Input
+  - Select the object with PlayerInputReader.
+  - Assign "Look Action" = InputSystem_Actions > Player > Look.
+  - (Move Action should already be assigned.)
+
+STEP 6 - Player
+  - On PlayerMovement assign:
+      Stats            = PlayerMovementStats asset
+      Camera Transform = Main Camera
+    (Rg stays as is.)
+
+STEP 7 - DI scope
+  - On the LevelOneLifetimeScope object assign
+      Third Person Camera Controller = the CameraTarget object.
+
+TEST CHECKLIST
+  [ ] Mouse / right stick orbits the camera, pitch clamped.
+  [ ] WASD moves relative to where the camera faces.
+  [ ] Camera pulls in near walls (check Collision Mask excludes the Player layer).
+  [ ] Cursor hidden/locked in play; visible when switching to the UI action map.
+  [ ] Editing CameraSettings / PlayerMovementStats during Play changes behavior live.
+
+NOTES
+  - Put the Player on its own layer and untick it in the Collision Mask,
+    otherwise the camera may collide with the player's own collider.
+  - Camera zoom is intentionally not implemented in this version.

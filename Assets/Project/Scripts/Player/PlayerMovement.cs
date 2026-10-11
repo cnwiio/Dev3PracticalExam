@@ -4,18 +4,17 @@ using VContainer;
 /// <summary>
 /// Stage 1 player movement. Reads processed input from <see cref="PlayerInputReader"/>
 /// and moves the Rigidbody on the XZ plane with acceleration, a speed cap, and facing rotation.
+/// Tunable values live in a <see cref="PlayerMovementStats"/> ScriptableObject.
 /// </summary>
 public class PlayerMovement : MonoBehaviour
 {
-    [Header("Required")]
     [SerializeField] private Rigidbody rg;
 
-    [Header("Movement Data")]
-    [SerializeField] private PlayerMovementData data;
-    
+    [Header("Stats")]
+    [SerializeField] private PlayerMovementStats stats;
 
     [Header("Optional")]
-    [Tooltip("If assigned, movement is relative to this transform's yaw (e.g. the camera).")]
+    [Tooltip("If assigned, movement is relative to this transform's yaw (e.g. the Main Camera).")]
     [SerializeField] private Transform cameraTransform;
 
     private PlayerInputReader inputReader;
@@ -41,6 +40,11 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (stats == null)
+        {
+            return;
+        }
+
         HandleHorizontalMovement();
         HandleRotation();
     }
@@ -69,8 +73,8 @@ public class PlayerMovement : MonoBehaviour
         Vector3 velocity = rg.linearVelocity;
         Vector3 horizontal = new Vector3(velocity.x, 0f, velocity.z);
 
-        Vector3 targetVelocity = direction * data.moveSpeed;
-        float rate = direction == Vector3.zero ? data.deceleration : data.acceleration;
+        Vector3 targetVelocity = direction * stats.moveSpeed;
+        float rate = direction == Vector3.zero ? stats.deceleration : stats.acceleration;
         Vector3 newHorizontal = Vector3.MoveTowards(horizontal, targetVelocity, rate * Time.fixedDeltaTime);
 
         // Preserve vertical velocity (gravity / jumps)
@@ -86,6 +90,6 @@ public class PlayerMovement : MonoBehaviour
         }
 
         Quaternion target = Quaternion.LookRotation(direction, Vector3.up);
-        rg.MoveRotation(Quaternion.Slerp(rg.rotation, target, data.rotationSpeed * Time.fixedDeltaTime));
+        rg.MoveRotation(Quaternion.Slerp(rg.rotation, target, stats.rotationSpeed * Time.fixedDeltaTime));
     }
 }

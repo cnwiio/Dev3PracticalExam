@@ -58,6 +58,9 @@ public class InputManager : MonoBehaviour
         UIActionMap?.Disable();
 
         playerActionMap?.Enable();
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     public void SwitchToUIActionMap()
@@ -65,5 +68,8 @@ public class InputManager : MonoBehaviour
         playerActionMap?.Disable();
 
         UIActionMap?.Enable();
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 }

@@ -9,9 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2b12011d6f0579a4abe492468c20a363, type: 3}
-  m_Name: Stage 1
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerMovementData
+  m_Script: {fileID: 11500000, guid: 0e3394709141129499521f365e8e6e19, type: 3}
+  m_Name: PlayerMovementStats
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerMovementStats
   moveSpeed: 6
   acceleration: 40
   deceleration: 50
