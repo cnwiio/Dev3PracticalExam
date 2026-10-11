@@ -763,6 +763,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
   rg: {fileID: 1836800141}
+  data: {fileID: 11400000, guid: bc1a9d22d18129f40a4db070b4d1a737, type: 2}
+  cameraTransform: {fileID: 102801071}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
