@@ -89,7 +89,7 @@ public class ClickableText : MonoBehaviour, IPointerClickHandler, IPointerEnterH
     private void UpScale()
     {
         // �� Vector3 ���������·��᡹ X ��� Y
-        LeanTween.scale(TMPtext.gameObject, new Vector3(scale, scale, 1f), duration).setEase(easeType);
+        LeanTween.scale(TMPtext.gameObject, new Vector3(scale, scale, 1f), duration).setEase(easeType).setIgnoreTimeScale(true);
     }
 
     private void DownScale()

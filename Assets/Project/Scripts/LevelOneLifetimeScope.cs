@@ -11,6 +11,7 @@ public class LevelOneLifetimeScope : LifetimeScope
     [SerializeField] private TimeCounter timeCounter;
     [SerializeField] private ScoreCounter scoreCounter;
     [SerializeField] private GameResultController gameResultController;
+    [SerializeField] private PauseMenuController pauseMenuController;
     
     protected override void Configure(IContainerBuilder builder)
     {
@@ -20,6 +21,7 @@ public class LevelOneLifetimeScope : LifetimeScope
         builder.RegisterComponent(timeCounter);
         builder.RegisterComponent(scoreCounter);
         builder.RegisterComponent(gameResultController);
+        builder.RegisterComponent(pauseMenuController);
 
         // MessagePipe: item interaction events
         MessagePipeOptions options = builder.RegisterMessagePipe();

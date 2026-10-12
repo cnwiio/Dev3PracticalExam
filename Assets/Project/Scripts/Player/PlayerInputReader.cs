@@ -18,6 +18,40 @@ public class PlayerInputReader : MonoBehaviour
     [SerializeField] private InputActionReference RunAction;
     [SerializeField] private InputActionReference JumpAction;
 
+    [Header("Action Maps")]
+    [SerializeField] private string playerMapName = "Player";
+    [SerializeField] private string uiMapName = "UI";
+
+    /// <summary>True while the UI action map is the active one (e.g. paused).</summary>
+    public bool IsUIMode { get; private set; }
+
+    /// <summary>
+    /// Switches the input between the gameplay (Player) map and the UI map.
+    /// While in UI mode, gameplay input is disabled and its values are reset.
+    /// </summary>
+    public void SetUIMode(bool uiMode)
+    {
+        IsUIMode = uiMode;
+        InputActionAsset asset = MoveAction.action.actionMap.asset;
+        InputActionMap player = asset.FindActionMap(playerMapName, false);
+        InputActionMap ui = asset.FindActionMap(uiMapName, false);
+
+        if (uiMode)
+        {
+            player?.Disable(); // fires canceled callbacks -> Move/Look/Run/Jump reset
+            ui?.Enable();
+            MovementInput = Vector2.zero;
+            LookInput = Vector2.zero;
+            RunHeld = false;
+            JumpHeld = false;
+        }
+        else
+        {
+            // UI map is left enabled on purpose: the EventSystem's UI input module may rely on it.
+            player?.Enable();
+        }
+    }
+
     private void OnEnable()
     {
         MoveAction.action.performed += OnMove;

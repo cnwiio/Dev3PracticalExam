@@ -32,6 +32,9 @@ public class GameResultController : MonoBehaviour
     private PlayerMovement player;
     private bool finished;
 
+    /// <summary>True once the stage has been won or lost.</summary>
+    public bool IsFinished => finished;
+
     [Inject]
     public void Construct(ScoreManager scoreManager, TimeCounter timeCounter, PlayerMovement player)
     {

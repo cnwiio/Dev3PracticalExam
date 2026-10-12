@@ -1,0 +1,64 @@
+PAUSE MENU - MANUAL SETUP (Unity Editor)
+========================================
+
+FEATURES
+  Esc / Gamepad Start toggles pause. Menu: Retry, Setting, Back to Main Menu.
+  While paused: Time.timeScale = 0 (timer, physics, movement frozen),
+  input switched to the UI action map (Player map disabled), cursor unlocked.
+  Resume: Player map re-enabled, cursor locked again, time restored.
+  Pause is ignored once the stage is won/lost.
+
+NEW / CHANGED SCRIPTS
+- Scripts/Stage 1/PauseMenuController.cs (NEW)
+- Scripts/Player/PlayerInputReader.cs    (new SetUIMode(bool), IsUIMode, map-name fields)
+- Scripts/Stage 1/GameResultController.cs (new IsFinished property)
+- Scripts/LevelOneLifetimeScope.cs       (new "Pause Menu Controller" field)
+
+STEP 1 - Pause panel (GamePlay scene, under the Canvas)
+  - UI > Panel "PausePanel" (full screen, dark semi-transparent), with children:
+      TMP title "Paused"
+      Button "ResumeButton"   (optional, recommended)
+      Button "RetryButton"
+      Button "SettingButton"
+      Button "MainMenuButton"
+  - Make sure the scene has an EventSystem using the Input System UI Input Module.
+
+STEP 2 - Setting panel
+  - Drag your existing "Setting Panel" prefab under the Canvas (above PausePanel in order
+    so it draws on top). Its own Back/close button should call
+    PauseMenuController.CloseSettings().
+  - Settings use LeanTween: tweens must "ignore time scale" (LeanTween.descr .setIgnoreTimeScale(true))
+    or they will not animate while paused. Plain value changes work fine.
+
+STEP 3 - Controller
+  - Create Empty "PauseMenuController" and add the PauseMenuController component:
+      Pause Panel          = PausePanel
+      Setting Panel        = the Setting Panel instance
+      Main Menu Scene Index= 0 (build index of MainMenu)
+  - Button OnClick:
+      ResumeButton  -> PauseMenuController.Resume()
+      RetryButton   -> PauseMenuController.Retry()
+      SettingButton -> PauseMenuController.OpenSettings()
+      MainMenuButton-> PauseMenuController.MainMenu()
+      Setting panel Back -> PauseMenuController.CloseSettings()
+
+STEP 4 - Input
+  - Select the PlayerInputReader object. Action map names default to "Player" and "UI"
+    (match the maps in InputSystem_Actions). Change them if yours differ.
+  - The UI map must exist in the same Input Actions asset as the Move action.
+
+STEP 5 - DI scope
+  - LevelOneLifetimeScope > Pause Menu Controller = the PauseMenuController object.
+    (Game Result Controller and Player Input Reader must be assigned already.)
+
+TEST CHECKLIST
+  [ ] Esc opens the menu; timer stops, player and physics freeze.
+  [ ] WASD / mouse look / jump do nothing while paused; buttons are clickable.
+  [ ] Esc again (or Resume) continues; cursor locks; player input works again.
+  [ ] Setting opens the settings; Back/Esc returns to the pause menu.
+  [ ] Retry restarts the stage unfrozen; Main Menu loads the menu unfrozen.
+  [ ] Esc does nothing on the Win / Game Over panel.
+
+NOTE
+  - Jump pressed on the frame of pausing may be missed; that is expected.
+  - The UI map is intentionally left enabled after resume (the UI input module may share it).
