@@ -1,0 +1,43 @@
+PLAYER RUN & JUMP - MANUAL SETUP (Unity Editor)
+===============================================
+
+CHANGED SCRIPTS
+- PlayerMovementStats.cs : new Run / Jump / Ground Check values (edit the asset, live in Play mode)
+- PlayerInputReader.cs   : new "Run Action" and "Jump Action" fields
+- PlayerMovement.cs      : run, jump (coyote time, jump buffer, variable height), ground check
+
+STEP 1 - Input actions
+  Select the object with PlayerInputReader:
+    Run Action  = InputSystem_Actions > Player > Sprint   (hold Left Shift / stick press)
+    Jump Action = InputSystem_Actions > Player > Jump     (Space / South button)
+  If an action is missing in your asset, add it to the Player map first.
+
+STEP 2 - Player object
+  - Needs a Rigidbody + a Collider (Capsule recommended).
+  - On PlayerMovement, "Body Collider" is auto-found; assign it if the collider is on a child.
+  - Put the Player on its own layer (e.g. "Player").
+
+STEP 3 - Stats asset (PlayerMovementStats)
+  - Ground Mask: select the ground layers and UNTICK the Player layer,
+    otherwise the player counts itself as ground and can jump forever.
+  - Run Speed       : speed while holding run.
+  - Jump Height     : metres reached by a full jump.
+  - Fall / Low Jump Gravity Multiplier : snappier feel (1 = normal gravity).
+  - Coyote Time     : grace period to jump after walking off a ledge.
+  - Jump Buffer Time: jump press remembered before landing.
+  - Air Control     : 0 = no air steering, 1 = same as ground.
+  - Ground Check Distance / Radius: tune if grounded detection is flaky.
+
+STEP 4 - Physics tips
+  - Give the Collider a Physic Material with 0 friction to avoid sticking to walls while jumping.
+  - Rigidbody Interpolation = Interpolate for smooth camera follow.
+
+TEST CHECKLIST
+  [ ] Holding run while moving increases speed; releasing returns to walk.
+  [ ] Space jumps only when on the ground (no double jump / infinite jump).
+  [ ] Tapping jump gives a short hop, holding gives a full jump.
+  [ ] Jump pressed just before landing still triggers a jump.
+  [ ] Jumping just after walking off a ledge works (coyote time).
+
+PUBLIC API (for animation / UI)
+  PlayerMovement.IsGrounded, PlayerMovement.IsRunning

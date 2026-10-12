@@ -76,6 +76,7 @@ public class GameResultController : MonoBehaviour
         if (!Finish()) return;
         if (winScoreText != null) winScoreText.SetText($"Final Score: {scoreManager.Score}");
         if (winPanel != null) winPanel.SetActive(true);
+        SoundManager.Instance?.PlaySFX("Win"); 
     }
 
     private void Lose(string reason)
@@ -84,6 +85,7 @@ public class GameResultController : MonoBehaviour
         if (gameOverScoreText != null) gameOverScoreText.SetText($"Final Score: {scoreManager.Score}");
         if (gameOverReasonText != null) gameOverReasonText.SetText(reason);
         if (gameOverPanel != null) gameOverPanel.SetActive(true);
+        SoundManager.Instance?.PlaySFX("Lose");
     }
 
     // Returns false if the game already ended (only the first result counts).

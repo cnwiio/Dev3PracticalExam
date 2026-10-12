@@ -73,12 +73,14 @@ MonoBehaviour:
     clip: {fileID: 8300000, guid: 47d1fe9cc7d251c478bb794f5d833776, type: 3}
   - name: Hover
     clip: {fileID: 8300000, guid: a3169ea3a00ef1b4390da0797af179f7, type: 3}
-  - name: Hit
-    clip: {fileID: 8300000, guid: 2583973a127b5954090a5b08b1e79dc1, type: 3}
   - name: ItemCollect
-    clip: {fileID: 8300000, guid: 2583973a127b5954090a5b08b1e79dc1, type: 3}
+    clip: {fileID: 8300000, guid: 4dc5c3cee5f997e48b3a2e36412f3f99, type: 3}
   - name: ItemHit
-    clip: {fileID: 8300000, guid: 2583973a127b5954090a5b08b1e79dc1, type: 3}
+    clip: {fileID: 8300000, guid: 962ab95d89fc39e48901afba2f3c69f1, type: 3}
+  - name: Win
+    clip: {fileID: 8300000, guid: 0f3b91940bc2c074a817a221bd2a4feb, type: 3}
+  - name: Lose
+    clip: {fileID: 8300000, guid: 20bb9f54c37e1044f8c0c731bb451949, type: 3}
   ambientSounds: []
 --- !u!82 &8114645990622542773
 AudioSource:
