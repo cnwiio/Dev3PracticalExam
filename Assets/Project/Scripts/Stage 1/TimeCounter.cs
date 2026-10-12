@@ -12,6 +12,10 @@ public class TimeCounter : MonoBehaviour
     private float counterF;
     private int counter;
     private IDisposable subscription;
+    private bool expired;
+
+    /// <summary>Raised once when the countdown reaches 0 (including via a time penalty).</summary>
+    public event Action TimeExpired;
 
     [Inject]
     public void Construct(ISubscriber<ItemCollectedMessage> subscriber)
@@ -45,6 +49,12 @@ public class TimeCounter : MonoBehaviour
         counterF = Mathf.Max(0f, counterF);
         counter = (int)MathF.Ceiling(counterF);
         textUI.SetText($"-- {counter.ToString()} --");
+
+        if (counterF <= 0f && !expired)
+        {
+            expired = true;
+            TimeExpired?.Invoke();
+        }
     }
 
     private void OnDestroy()

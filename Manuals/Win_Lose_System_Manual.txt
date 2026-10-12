@@ -1,0 +1,72 @@
+STAGE 1 WIN / LOSE SYSTEM - MANUAL SETUP (Unity Editor)
+=======================================================
+
+RULES (from GDD)
+  WIN  : timer reaches 0 AND score > 10000 (ScoreManager.WinScore)
+  LOSE : timer reaches 0 AND score <= 10000
+  LOSE : player falls below a Y threshold (pitfall / void)
+  On result: game freezes (Time.timeScale = 0), cursor unlocked, result panel shown.
+
+NEW / CHANGED SCRIPTS
+- Scripts/Stage 1/GameResultController.cs  (NEW: rules, panels, Retry / MainMenu)
+- Scripts/Stage 1/TimeCounter.cs           (new TimeExpired event, fires once at 0)
+- Scripts/LevelOneLifetimeScope.cs         (new "Game Result Controller" field)
+
+STEP 1 - Result UI (GamePlay scene, under the existing Canvas)
+  A) Create UI > Panel "WinPanel" (full screen, semi-transparent).
+     Children:
+       - TextMeshPro "Victory!" title
+       - TextMeshPro "WinScoreText"
+       - Button "PlayAgainButton"  (label: Play Again)
+       - Button "MainMenuButton"   (label: Main Menu)
+  B) Create UI > Panel "GameOverPanel" (same layout).
+     Children:
+       - TextMeshPro "Game Over" title
+       - TextMeshPro "GameOverScoreText"
+       - TextMeshPro "GameOverReasonText"
+       - Button "TryAgainButton"   (label: Try Again)
+       - Button "MainMenuButton"   (label: Main Menu)
+  C) Leave both panels in the scene; the script hides them on Start.
+     (Keep them ACTIVE in the hierarchy while setting up, or assign references anyway.)
+
+STEP 2 - Controller object
+  - Create Empty GameObject "GameResultController" (scene root).
+  - Add Component > GameResultController and assign:
+       Fall Threshold Y     = a value below the lowest platform (e.g. platform Y - 10)
+       Win Panel            = WinPanel
+       Win Score Text       = WinScoreText
+       Game Over Panel      = GameOverPanel
+       Game Over Score Text = GameOverScoreText
+       Game Over Reason Text= GameOverReasonText
+       Main Menu Scene Index= 0   (MainMenu is build index 0 ... check File > Build Profiles;
+                                   SampleScene currently sits at the top of the list -
+                                   remove it or set the index correctly)
+
+STEP 3 - Buttons (OnClick)
+  - PlayAgainButton / TryAgainButton -> GameResultController.Retry()
+  - MainMenuButton (both)            -> GameResultController.MainMenu()
+  (Drag the GameResultController object into the OnClick slot.)
+
+STEP 4 - DI scope
+  - Select the LevelOneLifetimeScope object.
+  - Assign "Game Result Controller" = the GameResultController object.
+  (Player Movement, Time Counter and Score Counter must already be assigned.)
+
+STEP 5 - Tuning for testing
+  - TimeCounter > Start Time = 30 (GDD). Temporarily lower it to ~5 to test quickly.
+  - Make sure placed Items sum to well above 10000 points so a win is possible.
+
+TEST CHECKLIST
+  [ ] Collect enough score, timer hits 0 -> Win panel with final score.
+  [ ] Timer hits 0 with score <= 10000 -> Game Over panel ("Time's up").
+  [ ] Walk off the platform -> Game Over panel immediately ("You fell off").
+  [ ] A time penalty that drains the clock to 0 also ends the game.
+  [ ] Retry restarts the stage (timer 30, score 0, game unfrozen).
+  [ ] Main Menu loads the menu scene and the game is not frozen.
+
+NOTES
+  - Panels are in-scene (no extra scenes needed). The GDD lists separate Win / GameOver
+    scenes; if you prefer scenes, replace the panel activation in GameResultController
+    with SceneManager.LoadScene and store the final score in a static/persistent holder.
+  - Score exactly 10000 is a LOSS (must be strictly greater).
+  - The Player must stay the object with PlayerMovement; its Y position is checked every frame.

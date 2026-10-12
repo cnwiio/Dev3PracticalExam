@@ -180,7 +180,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &197468923
 RectTransform:
   m_ObjectHideFlags: 0
@@ -708,8 +708,8 @@ MonoBehaviour:
 
 '
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 1de2d09ae76a2784b86ea911c52e9478, type: 2}
-  m_sharedMaterial: {fileID: -5529653265121989133, guid: 1de2d09ae76a2784b86ea911c52e9478, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 5e51791266c41f249b82cbab741cff35, type: 2}
+  m_sharedMaterial: {fileID: -6011428331024725032, guid: 5e51791266c41f249b82cbab741cff35, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -733,8 +733,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 56
-  m_fontSizeBase: 56
+  m_fontSize: 72
+  m_fontSizeBase: 72
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 16
@@ -857,8 +857,8 @@ MonoBehaviour:
 
 '
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 1de2d09ae76a2784b86ea911c52e9478, type: 2}
-  m_sharedMaterial: {fileID: -5529653265121989133, guid: 1de2d09ae76a2784b86ea911c52e9478, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 5e51791266c41f249b82cbab741cff35, type: 2}
+  m_sharedMaterial: {fileID: -6011428331024725032, guid: 5e51791266c41f249b82cbab741cff35, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -882,8 +882,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 56
-  m_fontSizeBase: 56
+  m_fontSize: 72
+  m_fontSizeBase: 72
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 16
@@ -1621,8 +1621,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Play
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 1de2d09ae76a2784b86ea911c52e9478, type: 2}
-  m_sharedMaterial: {fileID: -5529653265121989133, guid: 1de2d09ae76a2784b86ea911c52e9478, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 5e51791266c41f249b82cbab741cff35, type: 2}
+  m_sharedMaterial: {fileID: -6011428331024725032, guid: 5e51791266c41f249b82cbab741cff35, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1646,8 +1646,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 56
-  m_fontSizeBase: 56
+  m_fontSize: 72
+  m_fontSizeBase: 72
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 16
@@ -1735,7 +1735,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: -78.49724}
   m_SizeDelta: {x: 1920, y: 10}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1742887658
@@ -2129,8 +2129,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Collect Your Ball!
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 33408ab4ba69f1c48ace897cbe068d63, type: 2}
-  m_sharedMaterial: {fileID: -5529653265121989133, guid: 33408ab4ba69f1c48ace897cbe068d63, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 66b2a88386ad36c4ba50d8fb315fc983, type: 2}
+  m_sharedMaterial: {fileID: -6011428331024725032, guid: 66b2a88386ad36c4ba50d8fb315fc983, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2154,7 +2154,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 137.75
+  m_fontSize: 175.85
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1

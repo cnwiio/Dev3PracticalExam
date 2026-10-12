@@ -49,6 +49,8 @@ public class GameSettingsManager : MonoBehaviour
     private void Awake()
     {
         LoadSettings();
+        LeanTween.cancelAll();
+        LeanTween.reset();
     }
 
     private void Start()

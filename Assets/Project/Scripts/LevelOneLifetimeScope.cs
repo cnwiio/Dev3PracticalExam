@@ -10,6 +10,7 @@ public class LevelOneLifetimeScope : LifetimeScope
     [SerializeField] private ThirdPersonCameraController thirdPersonCameraController;
     [SerializeField] private TimeCounter timeCounter;
     [SerializeField] private ScoreCounter scoreCounter;
+    [SerializeField] private GameResultController gameResultController;
     
     protected override void Configure(IContainerBuilder builder)
     {
@@ -18,6 +19,7 @@ public class LevelOneLifetimeScope : LifetimeScope
         builder.RegisterComponent(thirdPersonCameraController);
         builder.RegisterComponent(timeCounter);
         builder.RegisterComponent(scoreCounter);
+        builder.RegisterComponent(gameResultController);
 
         // MessagePipe: item interaction events
         MessagePipeOptions options = builder.RegisterMessagePipe();
