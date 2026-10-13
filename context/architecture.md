@@ -1,114 +1,163 @@
 # Architecture & Design Patterns
 
-This document describes the architectural philosophy, dependency injection structure, lifecycle management, and communication patterns used in the **Dev3PracticalExam** project.
+This document describes the architectural philosophy, dependency injection structure, in-memory messaging pipeline, lifecycle management, and communication patterns used in the **Dev3PracticalExam** project.
 
 ---
 
 ## 1. Dependency Injection Architecture (VContainer)
 
-The project utilizes **VContainer** (`jp.hadashikick.vcontainer`) for decoupling gameplay dependencies.
+The project utilizes **VContainer** (`jp.hadashikick.vcontainer`) as its central Dependency Injection container.
 
-### Scopes & Hierarchy
+### Scope Configuration (`LevelOneLifetimeScope.cs`)
 
-```mermaid
-graph TD
-    A[VContainer Root / Project] --> B[MainMenuLifetimeScope]
-    A --> C[LevelOneLifetimeScope]
-    
-    subgraph MainMenu Scene
-        B --> D[MainMenu UI & Logic]
-    end
-    
-    subgraph GamePlay Scene
-        C --> E[PlayerInputReader]
-        C --> F[PlayerMovement]
-        E -. Injected Into .-> F
-    end
-```
-
-### Lifetime Scopes
-
-1. **`LevelOneLifetimeScope` (`Assets/Project/Scripts/LevelOneLifetimeScope.cs`)**:
-   - Manages dependencies for the `GamePlay` scene.
-   - Registers components in `Configure(IContainerBuilder builder)`:
-     ```csharp
-     builder.RegisterComponent(playerMovement);
-     builder.RegisterComponent(playerInputReader);
-     ```
-
-2. **`MainMenuLifetimeScope` (`Assets/Project/Scripts/MainMenuLifetimeScope.cs`)**:
-   - Scene-level scope for the start menu.
-   - Available for registering menu controllers or UI view models as the menu expands.
-
-### Injection Pattern
-
-The project primarily uses **Method Injection** via the `[Inject]` attribute on MonoBehaviours:
+The `GamePlay` scene (Stage 1) is orchestrated via `LevelOneLifetimeScope`:
 
 ```csharp
-public class PlayerMovement : MonoBehaviour
+public class LevelOneLifetimeScope : LifetimeScope
 {
-    private PlayerInputReader inputReader;
-
-    [Inject]
-    public void Construct(PlayerInputReader playerInputReader)
+    [SerializeField] private PlayerMovement playerMovement;
+    [SerializeField] private PlayerInputReader playerInputReader;
+    [SerializeField] private ThirdPersonCameraController thirdPersonCameraController;
+    [SerializeField] private TimeCounter timeCounter;
+    [SerializeField] private ScoreCounter scoreCounter;
+    [SerializeField] private GameResultController gameResultController;
+    [SerializeField] private PauseMenuController pauseMenuController;
+    
+    protected override void Configure(IContainerBuilder builder)
     {
-        inputReader = playerInputReader;
+        // 1. Scene MonoBehaviours
+        builder.RegisterComponent(playerMovement);
+        builder.RegisterComponent(playerInputReader);
+        builder.RegisterComponent(thirdPersonCameraController);
+        builder.RegisterComponent(timeCounter);
+        builder.RegisterComponent(scoreCounter);
+        builder.RegisterComponent(gameResultController);
+        builder.RegisterComponent(pauseMenuController);
+
+        // 2. MessagePipe Event Pipeline
+        MessagePipeOptions options = builder.RegisterMessagePipe();
+        builder.RegisterMessageBroker<ItemCollectedMessage>(options);
+
+        // 3. Domain Services & EntryPoints
+        builder.Register<ScoreManager>(Lifetime.Singleton);
+        builder.RegisterEntryPoint<ItemSfxPlayer>();
+
+        // 4. Dynamic Scene Item Injection
+        builder.RegisterBuildCallback(container =>
+        {
+            foreach (Item item in FindObjectsByType<Item>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                container.Inject(item);
+            }
+        });
     }
 }
 ```
 
-**Why this matters for agents:**
-- Do **not** use `FindObjectOfType<PlayerInputReader>()` or `GetComponent<PlayerInputReader>()` across game objects.
-- When introducing new dependencies to `PlayerMovement` (or new controllers), add parameters to `Construct(...)` and register them in `LevelOneLifetimeScope`.
+### Dependency Graph
+
+```mermaid
+graph TD
+    Scope[LevelOneLifetimeScope] --> MP[MessagePipe MessageBroker]
+    Scope --> SM[ScoreManager Singleton]
+    Scope --> ISP[ItemSfxPlayer EntryPoint]
+
+    subgraph Scene MonoBehaviours
+        PIR[PlayerInputReader]
+        PM[PlayerMovement]
+        TPC[ThirdPersonCameraController]
+        TC[TimeCounter]
+        SC[ScoreCounter]
+        GRC[GameResultController]
+        PMC[PauseMenuController]
+    end
+
+    PIR -. Injected .-> PM
+    PIR -. Injected .-> TPC
+    PIR -. Injected .-> PMC
+    
+    SM -. Injected .-> SC
+    SM -. Injected .-> GRC
+    TC -. Injected .-> GRC
+    PM -. Injected .-> GRC
+    GRC -. Injected .-> PMC
+```
 
 ---
 
-## 2. Hybrid Singleton & Scoped Architecture
+## 2. Event-Driven Messaging Architecture (MessagePipe)
 
-The project balances modern DI with pragmatic Unity patterns:
+To decouple placed stage items from the scoring, timing, and audio systems, the project integrates **MessagePipe** (`com.cysharp.messagepipe`).
 
-| Pattern | Components | Lifecycle | Rationale |
-| :--- | :--- | :--- | :--- |
-| **VContainer Scoped** | `PlayerMovement`, `PlayerInputReader` | Bound to `GamePlay` scene | Clean teardown on scene reload; prevents dangling scene references. |
-| **Persistent Singleton** | `SoundManager` | `DontDestroyOnLoad` | BGM and persistent sound effects must continue uninterrupted across scene transitions. |
-| **Scene Monobehaviour** | `GameSettingsManager`, `ScenesManager`, `ClickableText` | Scene-bound | UI presentation and event dispatching. |
-
----
-
-## 3. Communication Patterns
-
-### Input Decoupling
+### Data Flow Diagram
 
 ```mermaid
 sequenceDiagram
-    participant User as Player Input
-    participant Asset as InputSystem_Actions
-    participant Reader as PlayerInputReader
-    participant Move as PlayerMovement
-    participant RB as Rigidbody
+    participant Player as Capsule Player
+    participant Item as Item (Prefab Instance)
+    participant Pipe as MessagePipe Broker
+    participant Score as ScoreManager
+    participant Time as TimeCounter
+    participant SFX as ItemSfxPlayer
+    participant UI as ScoreCounter / HUD
 
-    User->>Asset: Moves Stick / Presses WASD
-    Asset->>Reader: OnMove Callback (performed)
-    Reader->>Reader: Stores MovementInput (Vector2)
-    Move->>Reader: Polls MovementInput during Update
-    Move->>RB: AddForce(movementDirection)
+    Player->>Item: Capsule Collider Trigger Overlap
+    Item->>Pipe: Publish(ItemCollectedMessage)
+    Item->>Item: Destroy(gameObject)
+    
+    par Subscriber 1: Score
+        Pipe->>Score: OnItemCollected(msg.ScoreDelta)
+        Score->>UI: OnScoreChanged(Score)
+    and Subscriber 2: Time
+        Pipe->>Time: OnItemCollected(msg.TimeDelta)
+        Time->>Time: counterF += msg.TimeDelta
+    and Subscriber 3: SFX
+        Pipe->>SFX: OnItemCollected(msg.IsPositive)
+        SFX->>SFX: SoundManager.PlaySFX(ItemCollect / ItemHit)
+    end
 ```
 
-1. **Input Asset -> Reader**: `PlayerInputReader` registers to `MoveAction.action.performed` and `canceled`.
-2. **Reader -> Consumer**: `PlayerMovement` polls the sanitized `MovementInput` property. Physics is isolated from raw input devices.
-3. **Action Map Switching**: `InputManager` acts as the coordinator between `Player` and `UI` action maps, disabling gameplay inputs when menus are active.
-
-### UI Interaction & Tweening
-
-- UI events are handled declaratively via `ClickableText.cs`.
-- Uses Unity UI event interfaces: `IPointerClickHandler`, `IPointerEnterHandler`, `IPointerExitHandler`, and `IScrollHandler`.
-- Animates visual feedback through `LeanTween` rather than Unity Animator state machines, keeping UI components lightweight and performant.
-- Triggers audio feedback via `SoundManager.Instance.PlaySFX(...)` and dispatches actions through serialized `UnityEvent`s.
+### Key Message: `ItemCollectedMessage`
+- `ItemType Type`: Identifies the item (`TimeBoost`, `ScoreBoost`, `TimePenalty`, `ScorePenalty`).
+- `int ScoreDelta`: $+500$ for positive boost, $-500$ for penalty.
+- `float TimeDelta`: $+3\text{s}$ for boost, $-5\text{s}$ for penalty.
+- `bool IsPositive`: Helper determining whether positive or obstacle sound effect is played.
 
 ---
 
-## 4. State Persistence
+## 3. ScriptableObject Stats Architecture
 
-- Audio and graphics settings use `PlayerPrefs` for local persistent storage.
-- Loaded on `Awake()` / `Start()` by `AudioSettings.cs` and `GameSettingsManager.cs`.
-- Real-time updates occur immediately when UI sliders/text items are adjusted, saving changes synchronously.
+To allow live game design tuning without modifying code or restarting play mode, player movement and camera controls are decoupled into ScriptableObjects:
+
+| Stats Asset | Class | Responsibility |
+| :--- | :--- | :--- |
+| **`PlayerMovementStats`** | `Assets/Project/Scripts/Player/PlayerMovementStats.cs` | Move speed (`6`), run speed (`10`), jump height (`2m`), gravity multipliers (`fall: 2x`, `lowJump: 2.5x`), coyote time (`0.1s`), jump buffer (`0.1s`), air control (`0.5`), ground check distance/radius/mask. |
+| **`ThirdPersonCameraSettings`** | `Assets/Project/Scripts/Camera/ThirdPersonCameraSettings.cs` | Look sensitivity (`0.12`), pitch bounds (`-30°` to `+70°`), pivot offset, camera distance (`5m`), shoulder offset, damping, collision filter mask. |
+
+---
+
+## 4. Time-Scale & Pause Architecture
+
+When pausing or concluding the game, multiple subsystems coordinate:
+
+```mermaid
+flowchart LR
+    Trigger[Esc / Finish / Fall] --> Freeze[Time.timeScale = 0f]
+    Freeze --> UnlockCursor[CursorLockMode.None<br/>Cursor.visible = true]
+    Freeze --> SwitchInput[PlayerInputReader.SetUIMode: true<br/>Disable Player Map / Enable UI Map]
+    Freeze --> ShowUI[Show Pause / Win / GameOver Panel]
+```
+
+1. **`Time.timeScale = 0f`**: Halts `Update()` deltas, physics simulations, and the countdown clock.
+2. **Cursor Management**: Unlocks and displays the mouse cursor for UI button clicks.
+3. **Action Map Switching**: `PlayerInputReader.SetUIMode(true)` disables the `Player` action map (resetting movement, look, run, and jump inputs) while enabling the `UI` action map.
+4. **Resuming / Retrying**: Restores `Time.timeScale = 1f`, relocks the cursor, and re-enables gameplay inputs.
+
+---
+
+## 5. Architectural Conventions Summary
+
+- **MonoBehaviour Injection**: Always use `[Inject] public void Construct(...)`.
+- **Pure C# Services**: Registered in LifetimeScope with `Lifetime.Singleton` or `Lifetime.Scoped`.
+- **Cross-Cutting Events**: Use MessagePipe `IPublisher<T>` and `ISubscriber<T>`, avoiding direct GameObject references or static singletons.
+- **Audio Singleton**: `SoundManager.Instance` with `DontDestroyOnLoad` handles continuous BGM and transient sound effects.

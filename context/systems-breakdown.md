@@ -1,6 +1,6 @@
 # Systems Breakdown
 
-This document provides a detailed technical breakdown of each custom subsystem within `Assets/Project/Scripts/`.
+This document provides a detailed technical breakdown of each custom subsystem across `Assets/Project/Scripts/`.
 
 ---
 
@@ -9,122 +9,187 @@ This document provides a detailed technical breakdown of each custom subsystem w
 Located in `Assets/Project/Scripts/Player/`.
 
 ### 1.1 `PlayerMovement.cs`
-- **Purpose:** Applies 3D physics forces to the player character using Unity's `Rigidbody`.
-- **Key Fields:**
-  - `[SerializeField] private Rigidbody rg`: Reference to the physics body.
-  - `private PlayerInputReader inputReader`: Dependency injected via VContainer.
-- **Key Methods:**
-  - `[Inject] public void Construct(PlayerInputReader playerInputReader)`: Injects the input reader.
-  - `Update()`: Calls `HandleHorizontalMovement()`.
-  - `HandleHorizontalMovement()`: Translates `inputReader.MovementInput` into a 3D horizontal force:
-    ```csharp
-    Vector3 movementDirection = new Vector3(inputReader.MovementInput.x, 0, inputReader.MovementInput.y).normalized * 10;
-    rg.AddForce(movementDirection, ForceMode.Force);
-    ```
-- **Agent Note:** Physics additions should ideally run inside `FixedUpdate()` rather than `Update()`.
-
----
-
-### 1.2 `PlayerInputReader.cs`
-- **Purpose:** Bridges Unity New Input System events with game logic, exposing clean properties.
-- **Key Properties:**
-  - `public Vector2 MovementInput { get; private set; }`: Normalized 2D movement vector (WASD / Left Stick).
-- **Key Fields:**
-  - `[SerializeField] private InputActionReference MoveAction`: Reference to the `Move` action in `InputSystem_Actions`.
-- **Lifecycle:**
-  - `OnEnable()`: Subscribes `performed += OnMove` and `canceled += OnStopMove`.
-  - `OnDisable()`: Unsubscribes to avoid memory leaks and ghost callbacks.
-
----
-
-### 1.3 `InputManager.cs`
-- **Purpose:** Manages active action maps to avoid input collisions between UI and gameplay.
-- **Action Map Modes:**
-  ```csharp
-  public enum ActionMapType
-  {
-      Player,
-      UI
-  }
-  ```
-- **Key Methods:**
-  - `SwitchToPlayerActionMap()`: Disables UI action map and enables Player action map.
-  - `SwitchToUIActionMap()`: Disables Player action map and enables UI action map.
-  - Property `CurrentActionMaptype`: Triggers appropriate map switch on change.
-
----
-
-## 2. Audio Subsystem
-
-Located in `Assets/Project/Scripts/Sound/` and `Assets/Project/Sound/`.
-
-### 2.1 `SoundManager.cs`
-- **Pattern:** Persistent Singleton (`DontDestroyOnLoad`).
-- **Audio Channels:**
-  - `AudioSource bgmSource`: For looping background music.
-  - `AudioSource sfxSource`: For one-shot sound effects (`PlayOneShot`).
-  - `AudioSource[] ambientSources`: Array of channels for concurrent ambient sounds with stereo panning.
-- **Sound Clip Libraries:**
-  - `Sound[] bgmSounds`
-  - `Sound[] sfxSounds`
-  - `Sound[] ambientSounds`
+- **Role:** Physics-driven character controller applying forces and setting velocities on a `Rigidbody`.
+- **Key Features:**
+  - **Physics Step:** Runs entirely within `FixedUpdate()`.
+  - **Ground Detection:** Uses `Physics.SphereCast` from player bounds/feet downwards (`stats.groundCheckRadius`, `stats.groundCheckDistance`, `stats.groundMask`).
+  - **Coyote Time:** Tracks `lastGroundedTime`; allows jumping for a brief window (`stats.coyoteTime`, default `0.1s`) after leaving a platform ledge.
+  - **Jump Buffer:** Tracks `lastJumpPressedTime`; registers a jump press made shortly before touching the ground (`stats.jumpBufferTime`, default `0.1s`).
+  - **Variable Jump Height:** Calculates upward velocity via $v = \sqrt{2 \cdot g \cdot h}$. If the jump button is released early while ascending, applies `stats.lowJumpGravityMultiplier` (default `2.5x`) via `ApplyExtraGravity()`.
+  - **Snappy Fall:** Applies `stats.fallGravityMultiplier` (default `2.0x`) when falling ($v_y < 0$) for responsive platforming feel.
+  - **Horizontal Acceleration/Deceleration:** Uses `Vector3.MoveTowards` on the horizontal velocity plane with distinct rates for acceleration, deceleration, and reduced air control (`stats.airControl`).
+  - **Camera-Relative Direction:** Rotates movement input according to `cameraTransform.eulerAngles.y`.
+  - **Facing Rotation:** Uses `rg.MoveRotation(Quaternion.Slerp(...))` towards movement direction.
 - **Public API:**
-  - `PlayBGM(string soundName)`: Plays or switches music if not already playing. Default started in `Start()` is `"Level"`.
-  - `PlaySFX(string soundName)`: Triggers one-shot sound effect.
-  - `PlayAmbient(string soundName, float panValue = 0f)`: Finds an available ambient channel, sets panning, and loops.
-  - `StopAmbient(string soundName)`: Stops the specified ambient track.
+  - `bool IsGrounded`: Current grounded state.
+  - `bool IsRunning`: True when holding sprint while moving.
 
 ---
 
-### 2.2 `AudioSettings.cs`
-- **Purpose:** Bridges volume settings (linear `0.0f` to `1.0f`) to `AudioMixer` logarithmic decibel scale.
-- **Logarithmic Formula:**
-  $$\text{Decibels} = \log_{10}(\text{level}) \times 20\text{ dB}$$
-- **Exposed Mixer Parameters:**
-  - `"MasterVolume"`
-  - `"MusicVolume"`
-  - `"SFXVolume"`
-  - `"AmbientVolume"`
-- **Persistence:** Automatically saves and loads all 4 volume levels via `PlayerPrefs` (default `1.0f`).
+### 1.2 `PlayerMovementStats.cs` & `PlayerMovementData.cs`
+- **Role:** ScriptableObject assets storing tunable parameters live in the Unity Inspector without script recompilation.
+- **Parameters:**
+  - `moveSpeed = 6f`, `runSpeed = 10f`, `acceleration = 40f`, `deceleration = 50f`
+  - `rotationSpeed = 12f`
+  - `jumpHeight = 2f`, `fallGravityMultiplier = 2f`, `lowJumpGravityMultiplier = 2.5f`
+  - `coyoteTime = 0.1f`, `jumpBufferTime = 0.1f`, `airControl = 0.5f`
+  - `groundMask = ~0`, `groundCheckDistance = 0.15f`, `groundCheckRadius = 0.25f`
 
 ---
 
-### 2.3 Supporting Audio Types
-- **`Sound.cs`:** Serializable struct holding `string name` and `AudioClip clip`.
-- **`GetAudio.cs`:** MonoBehaviour helper allowing Unity UI buttons to trigger SFX without direct code access.
+### 1.3 `PlayerInputReader.cs`
+- **Role:** Bridges Unity New Input System events with game logic.
+- **Exposed Properties:**
+  - `Vector2 MovementInput`: 2D move vector (WASD / Left Stick).
+  - `Vector2 LookInput`: 2D look delta (Mouse / Right Stick).
+  - `bool RunHeld`: True while sprint button is held.
+  - `bool JumpHeld`: True while jump button is held.
+  - `bool IsUIMode`: True while the UI action map is active.
+- **Exposed Events:**
+  - `event Action JumpPressed`: Invoked upon pressing jump.
+- **Key Method:**
+  - `SetUIMode(bool uiMode)`: Toggles between `Player` and `UI` action maps. When switching to UI mode, disables the player map and zeroes out all movement/look/jump state.
 
 ---
 
-## 3. UI & Settings Subsystem
-
-Located in `Assets/Project/Scripts/`.
-
-### 3.1 `GameSettingsManager.cs`
-- **Purpose:** Controls display resolution, VSync, target frame rate, fullscreen state, and audio levels.
-- **Options Supported:**
-  - **Resolutions:** Customizable array (HD `1280x720`, HD+ `1600x900`, FHD `1920x1080`, 2K `2560x1440`).
-  - **VSync:** `Off` (`QualitySettings.vSyncCount = 0`) vs `On` (`1`).
-  - **Target FPS:** `30`, `60`, `120`, `144`, `-1` (Unlimited).
-  - **Fullscreen:** `Windowed` vs `Full Screen`.
-  - **Volume Levels:** SFX, Master, Music, Ambient (stepped `0` to `10` / `0%` to `100%`).
-- **UI Feedback:** Updates TextMeshPro labels in real time.
-
----
-
-### 3.2 `ClickableText.cs`
-- **Purpose:** Interactive text button component enhancing TextMeshPro elements with LeanTween animations and mouse wheel support.
-- **Interfaces Implemented:**
-  - `IPointerClickHandler`: Fires `onLeftClick` or `onRightClick` UnityEvents + `"Click"` SFX.
-  - `IPointerEnterHandler`: Animates scale up (`1.1x`, `0.15s`, `LeanTweenType.easeOutBack`), turns text `Color.yellow`, plays `"Hover"` SFX.
-  - `IPointerExitHandler`: Restores scale and initial color.
-  - `IScrollHandler`: Detects mouse scroll delta (`eventData.scrollDelta.y`), invoking `onScrollUp` or `onScrollDown` for quick setting adjustments.
-
----
-
-## 4. Scene Management
-
-Located in `Assets/Project/Scripts/ScenesManager.cs`.
-
+### 1.4 `InputManager.cs`
+- **Role:** Action map coordinator and cursor lock manager.
 - **Key Methods:**
-  - `OpenScene()`: Loads the gameplay level asynchronously via `SceneManager.LoadSceneAsync(1)`.
-  - `CloseGame()`: Exits the application via `Application.Quit()`.
+  - `SwitchToPlayerActionMap()`: Enables player map, locks and hides cursor.
+  - `SwitchToUIActionMap()`: Enables UI map, unlocks and reveals cursor.
+
+---
+
+## 2. Third-Person Camera Subsystem
+
+Located in `Assets/Project/Scripts/Camera/`.
+
+### 2.1 `ThirdPersonCameraController.cs`
+- **Role:** Drives a Cinemachine 3 `CinemachineCamera` follow target (`CameraTarget`).
+- **Key Features:**
+  - **Target Follow:** Positions itself at `player.position + settings.pivotOffset` during `LateUpdate()`.
+  - **Pitch & Yaw Rotation:** Accumulates look inputs, clamps pitch between `minPitch` and `maxPitch` (default `-30°` to `+70°`), and applies angle smoothing via `Mathf.SmoothDampAngle`.
+  - **Live Settings Sync:** Every frame, updates `CinemachineThirdPersonFollow` fields (`CameraDistance`, `ShoulderOffset`, `CameraSide`, `VerticalArmLength`, `Damping`, and `AvoidObstacles` collision filtering).
+  - **Exposed Property:** `float Yaw`: Camera horizontal angle for directional movement.
+
+---
+
+### 2.2 `ThirdPersonCameraSettings.cs`
+- **Role:** ScriptableObject holding camera framing, look sensitivity, smoothing, and collision settings.
+- **Parameters:**
+  - `sensitivity = 0.12f`, `invertY = false`, `minPitch = -30f`, `maxPitch = 70f`
+  - `pivotOffset = (0, 1.6, 0)`, `cameraDistance = 5f`, `shoulderOffset = (0.5, -0.2, 0)`, `cameraSide = 0.6f`
+  - `damping = (0.1, 0.25, 0.3)`, `rotationSmoothTime = 0.03f`
+  - `collisionMask`, `cameraRadius = 0.25f`, `dampingIntoCollision = 0f`, `dampingFromCollision = 0.5f`
+
+---
+
+## 3. Stage 1 Gameplay & Minigame Subsystem
+
+Located in `Assets/Project/Scripts/Stage 1/`.
+
+### 3.1 `TimeCounter.cs`
+- **Role:** Controls the 30-second digital countdown clock.
+- **Key Features:**
+  - Starts at `startTime = 30f` (configurable in inspector).
+  - Listens to `ItemCollectedMessage` via MessagePipe; adjusts remaining time by `msg.TimeDelta` (+3s boost, -5s penalty).
+  - Updates HUD text formatted as `-- {counter} --`.
+  - When time reaches zero, raises `event Action TimeExpired` once.
+
+---
+
+### 3.2 `ScoreManager.cs`
+- **Role:** In-memory score domain service (VContainer Singleton).
+- **Key Features:**
+  - Constant: `WinScore = 10000` (threshold required to win).
+  - Listens to `ItemCollectedMessage`; updates `Score` property (+500 / -500).
+  - Dispatches `event Action<int> OnScoreChanged`.
+
+---
+
+### 3.3 `ScoreCounter.cs`
+- **Role:** HUD View component bound to `ScoreManager.OnScoreChanged`. Displays `Score: {score}`.
+
+---
+
+### 3.4 `GameResultController.cs`
+- **Role:** Evaluates Stage 1 win/loss rules according to the GDD.
+- **Rules Evaluated:**
+  - **Win:** Timer expires (`OnTimeExpired`) **AND** `scoreManager.Score > ScoreManager.WinScore` (strictly $> 10,000$).
+  - **Lose (Under Score):** Timer expires **AND** `scoreManager.Score <= ScoreManager.WinScore`.
+  - **Lose (Pitfall / Void):** `player.transform.position.y < fallThresholdY` (default `-10f`).
+- **Outcome Handling:**
+  - Sets `Time.timeScale = 0f`.
+  - Unlocks mouse cursor (`CursorLockMode.None`, `Cursor.visible = true`).
+  - Activates `winPanel` or `gameOverPanel` with final score and reason.
+  - Plays `"Win"` or `"Lose"` SFX via `SoundManager`.
+- **Public Button Handlers:**
+  - `Retry()`: Restores `Time.timeScale = 1f`, reloads current active scene.
+  - `MainMenu()`: Restores `Time.timeScale = 1f`, loads `mainMenuSceneIndex` (Build index 0).
+
+---
+
+### 3.5 `PauseMenuController.cs`
+- **Role:** In-game pause modal controller.
+- **Key Features:**
+  - Creates dedicated `InputAction` listening to `<Keyboard>/escape` and `<Gamepad>/start`.
+  - Ignores pause triggers if `GameResultController.IsFinished` is true.
+  - `Pause()`: Sets `Time.timeScale = 0f`, enables UI input mode, unlocks cursor, shows pause panel.
+  - `Resume()`: Restores `Time.timeScale = 1f`, relocks cursor, hides panels.
+  - `OpenSettings()` / `CloseSettings()`: Toggles the `Setting Panel` prefab instance within the pause menu.
+
+---
+
+## 4. Items & Collectibles Subsystem
+
+Located in `Assets/Project/Scripts/Stage 1/Items/`.
+
+### 4.1 `Item.cs`
+- **Role:** Pickup / obstacle entity with trigger collider.
+- **Workflow:**
+  - Injected with `IPublisher<ItemCollectedMessage>` via VContainer `RegisterBuildCallback`.
+  - On trigger collision with `PlayerMovement`:
+    - Constructs `ItemCollectedMessage`.
+    - Publishes the message through MessagePipe.
+    - Destroys itself (`Destroy(gameObject)`).
+
+### 4.2 `ItemType.cs`
+- `TimeBoost`: $+3\text{ seconds}$
+- `ScoreBoost`: $+500\text{ points}$
+- `TimePenalty`: $-5\text{ seconds}$
+- `ScorePenalty`: $-500\text{ points}$
+
+### 4.3 `ItemCollectedMessage.cs`
+- Readonly struct carrying `ItemType Type`, `int ScoreDelta`, `float TimeDelta`, and `bool IsPositive`.
+
+### 4.4 `ItemSfxPlayer.cs`
+- Implements `IStartable` and `IDisposable`.
+- Subscribes to `ItemCollectedMessage`; triggers `SoundManager.Instance.PlaySFX("ItemCollect")` for positive items or `"ItemHit"` for obstacle penalties.
+
+---
+
+## 5. Audio Subsystem
+
+Located in `Assets/Project/Scripts/Sound/`.
+
+### 5.1 `SoundManager.cs`
+- **Pattern:** Persistent Singleton (`DontDestroyOnLoad`).
+- **Channels:** `bgmSource` (Looping music), `sfxSource` (One-shots), `ambientSources[]` (Panned stereo ambient tracks).
+- **Public API:**
+  - `PlayBGM(string soundName)`
+  - `PlaySFX(string soundName)`
+  - `PlayAmbient(string soundName, float panValue = 0f)`
+  - `StopAmbient(string soundName)`
+
+### 5.2 `AudioSettings.cs`
+- Bridges volume levels ($0.0$ to $1.0$) to `AudioMixer` logarithmic decibels:
+  $$\text{Decibels} = \log_{10}(\text{level}) \times 20\text{ dB}$$
+- Persists `"MasterVolume"`, `"MusicVolume"`, `"SFXVolume"`, and `"AmbientVolume"` via `PlayerPrefs`.
+
+---
+
+## 6. UI & Scene Management
+
+- **`GameSettingsManager.cs`:** Controls resolution, VSync, target FPS, fullscreen, and audio levels with `LeanTween.cancelAll()` / `reset()` on `Awake()`.
+- **`ClickableText.cs`:** Interactive text button with LeanTween scaling, yellow hover highlight, click events, and mouse scroll delta support.
+- **`ScenesManager.cs`:** `OpenScene(int sceneIndex)` (asynchronous scene loading by index) and `CloseGame()`.
