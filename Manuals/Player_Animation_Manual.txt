@@ -1,0 +1,73 @@
+PLAYER ANIMATION (Idle / Walk / Run / Jump) - MANUAL SETUP (Unity Editor)
+=========================================================================
+
+NEW SCRIPT
+- PlayerAnimationController.cs (Assets/Project/Scripts/Player/)
+  Read-only "view" script. It reads PlayerMovement.IsGrounded / IsRunning and the
+  Rigidbody velocity, then sets Animator parameters. PlayerMovement, PlayerInputReader
+  and the camera scripts are reused from Stage 1 WITHOUT any change.
+
+STEP 1 - Player prefab / object (Stage 2)
+  - Same object as Stage 1: Rigidbody + Collider + PlayerMovement (+ PlayerInputReader via VContainer).
+  - Character model (with Animator) as a CHILD of the player root.
+  - On the model's Animator:
+      Controller      = Player Animation Controller
+      Avatar          = the character's avatar
+      Apply Root Motion = OFF   (movement comes from the Rigidbody)
+  - Add component PlayerAnimationController on the player ROOT (same object as PlayerMovement).
+    Animator / Movement / Rigidbody are auto-found; assign Animator manually if needed.
+
+STEP 2 - Animator parameters (Window > Animation > Animator > Parameters tab, "+")
+  Speed          Float     (required)
+  IsGrounded     Bool      (required)
+  Jump           Trigger   (required for jump takeoff)
+  VerticalSpeed  Float     (optional, for Fall)
+  IsRunning      Bool      (optional)
+  Names are case-sensitive. Missing parameters are skipped without errors.
+
+STEP 3 - Animation clips / states (Base Layer)
+  Existing: Idle, Walking, run.   Add: Jump (and optionally Fall).
+  - Set Idle, Walking, run clips -> Loop Time ON.
+  - Jump / Fall clips: Loop Time OFF for Jump, ON for Fall (optional).
+  - Default state = Idle.
+
+STEP 4 - Transitions (turn Has Exit Time OFF, Transition Duration ~0.1 on all
+         locomotion transitions, Fixed Duration ON)
+  Defaults: moveSpeed = 6, runSpeed = 10 (see PlayerMovementStats). Midpoint = 8.
+
+  Idle    -> Walking : Speed Greater 0.1
+  Walking -> Idle    : Speed Less    0.1
+  Walking -> run     : Speed Greater 8
+  run     -> Walking : Speed Less    8
+  run     -> Idle    : Speed Less    0.1   (optional shortcut)
+
+  Any State -> Jump  : Jump (trigger)        [Can Transition To Self = OFF]
+  Jump -> Fall       : VerticalSpeed Less 0  (if you have a Fall clip)
+  Jump/Fall -> Idle  : IsGrounded true       (Has Exit Time OFF, duration ~0.05)
+  No Fall clip: just  Jump -> Idle : IsGrounded true  (also add Jump -> Walking/run
+  if you want a smooth landing: IsGrounded true AND Speed Greater 0.1)
+  Walking running while walking off a ledge (no jump): Any State -> Fall :
+  IsGrounded false AND VerticalSpeed Less -0.5   (optional)
+
+  Tip: if the Speed numbers don't match your Stats asset, set the thresholds to
+  (walk speed * 0.5) for Idle and (walkSpeed + runSpeed) / 2 for Walk/Run.
+
+STEP 5 - Optional: Blend Tree (smoother)
+  Create a Blend Tree "Locomotion" (parameter = Speed):
+    Idle 0 | Walking 6 | run 10   (Compute Thresholds OFF)
+  Then only transitions Any State -> Jump and Jump -> Locomotion are needed.
+
+TUNING (PlayerAnimationController inspector)
+  Speed Damp Time       : smoothing of the Speed parameter (0.1 default).
+  Jump Takeoff Velocity : min upward m/s to fire the Jump trigger.
+
+TEST CHECKLIST
+  [ ] Standing still plays Idle.
+  [ ] WASD plays Walking; holding Shift plays run; releasing returns to Walking/Idle.
+  [ ] Pressing Space plays Jump once (no re-trigger while in air).
+  [ ] Landing returns to Idle/Walking/run (IsGrounded true).
+  [ ] Character does not slide / jitter (Apply Root Motion OFF).
+  [ ] Check Animator window in Play mode: Speed / IsGrounded values change.
+
+PUBLIC API USED
+  PlayerMovement.IsGrounded, PlayerMovement.IsRunning, Rigidbody.linearVelocity
